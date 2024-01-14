@@ -53,8 +53,23 @@ func (o *OrgProvider) CreateBranch(name string, meta map[string]string) (uint, e
 
 func (o *OrgProvider) ListBranches() ([]db.Branch, error) {
 	var branches []db.Branch
-	tx := o.db.Find(&branches)
+	tx := o.db.Preload("ServicePoints").Preload("ServicePoints.Labels").Preload("ServicePoints.User").Find(&branches)
 	return branches, tx.Error
+}
+
+func (o *OrgProvider) CreateSP(branch uint, labels []uint) (uint, error) {
+	var lbls []db.Label
+	for _, l := range labels {
+		lbl := db.Label{}
+		lbl.ID = l
+		lbls = append(lbls, lbl)
+	}
+	sp := &db.ServicePoint{
+		BranchID: branch,
+		Labels:   lbls,
+	}
+	tx := o.db.Create(sp)
+	return sp.ID, tx.Error
 }
 
 // endregion
@@ -71,4 +86,18 @@ func (o *OrgProvider) CreateRole(name string, privs map[string]string, meta map[
 	}
 	tx := o.db.Create(role)
 	return role.ID, tx.Error
+}
+
+func (o *OrgProvider) ListRoles() ([]db.Role, error) {
+	var roles []db.Role
+	tx := o.db.Find(&roles)
+	return roles, tx.Error
+}
+
+// endregion
+
+func (o *OrgProvider) ListUsers() ([]db.User, error) {
+	var users []db.User
+	tx := o.db.Preload("Role").Find(&users)
+	return users, tx.Error
 }

@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"errors"
+	"log"
 	"main/models/db"
 	"main/services"
 )
@@ -49,5 +51,26 @@ func (a *Account) GetUser(uid uint) (err error) {
 }
 
 func (a *Account) HasPermission(perm string) bool {
-	return a.User.Role.Privileges[perm] == "1"
+	log.Println("Checking permission", perm, a.User.Role.Privileges[perm])
+	return a.User.Role.Privileges[perm].(float64) == 1
+}
+
+func (a *Account) NewSession() (session string) {
+	return a.p.sessions.NewSession(a.User.ID)
+}
+
+func (a *Account) DeleteSession(session string) {
+	a.p.sessions.DeleteSession(session)
+}
+
+func (a *Account) GetSession(session string) (uid uint) {
+	return a.p.sessions.GetSession(session)
+}
+
+func (a *Account) AuthSession(session string) error {
+	uid := a.p.sessions.GetSession(session)
+	if uid == 0 {
+		return errors.New("Invalid session")
+	}
+	return a.GetUser(uid)
 }

@@ -2,7 +2,7 @@ import Ticket from "@/components/Ticket";
 import {Accordion, AccordionItem} from "@szhsin/react-accordion";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronDown} from "@fortawesome/free-solid-svg-icons";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 const srv_labels = [
     {label: "В один конец", tag: "K"},
@@ -21,6 +21,7 @@ const times = [
 ]
 
 export function getServerSideProps(ctx) {
+
     return {
         props: {
             labels: srv_labels,
@@ -39,11 +40,16 @@ function daysInMonth (date, offset=0) { // Use 1 for January, 2 for February, et
 }
 export default function Order({labels}) {
 
+    const [orgData, setOrgData] = useState({})
+    useEffect(()=>{
+        fetch("http://localhost:5000/fetch/org").then(r=>r.json()).then(j=>{
+            setOrgData(j)
+        })
+    },[])
+
     const date =  new Date()
 
     const offset = new Date(date.getFullYear(), date.getMonth(), 0).getDay()
-
-    const weeknd = [""]
     const blook = (()=>{
 
         let b = []
@@ -60,12 +66,12 @@ export default function Order({labels}) {
     return <div className="h-screen flex flex-col justify-center items-center">
         <div className="flex gap-24">
             <Ticket img="https://img.icons8.com/pastel-glyph/128/secured-letter--v1.png"
-            title="Билет в Бобруйск" subtitle={"Это надолго"} ticker={label.tag+"-07"}
+            title={orgData.title} subtitle={orgData.desc} ticker={label.tag+"-07"}
             date={`${day} ${month}`} time={time.time} load={"Низкая"} labels={[label.label]}
             note="Адрес: ул Пушкина, 12, отделение №030"/>
+/
 
-
-            <div className="flex flex-col w-96 h-full bg-[#f4f5f6] p-4 rounded-2xl  border-solid border-2 border-[#9facbc]">
+            <div className="flex flex-col w-96 h-full bg-[#f4f5f6] p-4 rounded-2xl border-solid border-2 border-[#9facbc]">
                 <p className="bg-slate-600 px-4 py-2 rounded-xl text-white text-3xl">Тут заголовок</p>
 
                 <Accordion>

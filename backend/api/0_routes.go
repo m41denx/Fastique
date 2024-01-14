@@ -1,20 +1,21 @@
 package api
 
 import (
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/swagger"
 	"main/providers"
 )
 
 type API struct {
 	AccountProvider *providers.AccountProvider
-	SessionProvider *providers.SessionProvider
 	TicketProvider  *providers.TicketProvider
+	OrgProvider     *providers.OrgProvider
 
-	Host string
+	Config map[string]string
+	Host   string
 }
 
 func StartWS(api *API) error {
@@ -26,13 +27,46 @@ func StartWS(api *API) error {
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{AllowCredentials: true}))
 	app.Use(recover.New())
-	app.Get("/antiswagger/*", swagger.HandlerDefault) //Swag
+
+	// region Monitor
+	app.Use("/monitor", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	app.Get("/monitor/:id", websocket.New(nil))
+	//endregion
 
 	// region Auth
 	auth := app.Group("/auth")
-	auth.Post("/login", nil)
-	auth.Post("/register", nil)
+	auth.Post("/login", api.AuthLogin)
+	auth.Get("/user", api.AuthUser)
+	//endregion
+
+	//region Fetch
+	fetch := app.Group("/fetch")
+	fetch.Get("/org", api.Fetch)
+	//endregion
+
+	//region Adm
+	adm := app.Group("/adm")
+	adm.Get("/roles", api.AdmGetRoles)
+	adm.Get("/users", api.AdmGetUsers)
+	adm.Get("/branches", api.AdmGetBranches) // Get Branch tree
+	adm.Post("/branch", api.AdmCreateBranch) // Create branch
+	//adm.Post("/branch/:id", nil) // Edit branch
+	adm.Post("/sp", api.AdmCreateSP)
+	adm.Get("/labels", api.AdmGetLabels)
+	adm.Get("/tickets", api.AdmGetTickets)
 	//endregion
 
 	return app.Listen(api.Host)
+}
+
+func authToken(c *fiber.Ctx, acc *providers.Account) error {
+	token := c.Get("Authorization")
+	err := acc.AuthSession(token)
+	return err
 }

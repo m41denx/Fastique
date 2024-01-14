@@ -2,14 +2,13 @@ package db
 
 import (
 	"gorm.io/gorm"
-	"main/models"
 )
 
 type ServicePoint struct {
 	gorm.Model
-	Branch            Branch
-	Labels            []Label
-	Available         bool
-	User              User
-	AvailabilityTimes models.JSONMap
+	BranchID  uint    `json:"-"`
+	Labels    []Label `json:"labels" gorm:"many2many:sp_labels"`
+	Available bool    `json:"available"`
+	User      User    `json:"user"`
+	UserID    uint    `json:"-"`
 }

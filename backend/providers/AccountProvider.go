@@ -1,17 +1,17 @@
 package providers
 
 import (
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"gorm.io/gorm"
 	"main/models/db"
+	"main/services"
 )
 
 type AccountProvider struct {
 	db       *gorm.DB
-	sessions *session.Session
+	sessions services.SessionService
 }
 
-func NewAccountProvider(db *gorm.DB, sessionStorage *session.Session) *AccountProvider {
+func NewAccountProvider(db *gorm.DB, sessionStorage services.SessionService) *AccountProvider {
 	return &AccountProvider{
 		db:       db,
 		sessions: sessionStorage,

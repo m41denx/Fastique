@@ -1,12 +1,12 @@
 package db
 
 import (
-	"gorm.io/gorm"
 	"main/models"
 )
 
 type Branch struct {
-	gorm.Model
-	Name string
-	Meta models.JSONMap
+	ID            uint
+	Name          string         `json:"name"`
+	ServicePoints []ServicePoint `json:"service_points"`
+	Meta          models.JSONMap `json:"meta"`
 }

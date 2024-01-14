@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -42,5 +43,5 @@ func (DefaultSecurityService) HashPassword(password string) string {
 	s1.Write([]byte(password))
 	s256 := sha256.New()
 	s256.Write(s1.Sum(nil))
-	return string(s256.Sum(nil))
+	return fmt.Sprintf("%x", s256.Sum(nil))
 }

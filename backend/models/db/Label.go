@@ -7,7 +7,7 @@ import (
 
 type Label struct {
 	gorm.Model
-	Name     string
-	Template string
-	Fields   models.JSONMap
+	Name     string         `json:"name"`
+	Template string         `json:"-"`
+	Fields   models.JSONMap `json:"fields"`
 }

@@ -1,0 +1,7 @@
+{
+  "org.name": "Билеты в Бобруйск",
+  "org.desc": "Это надолго",
+  "app.addr": ":5000",
+  "adm.name": "admin",
+  "adm.pass": "Adminster0"
+}

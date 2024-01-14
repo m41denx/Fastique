@@ -7,7 +7,7 @@ import (
 
 type Role struct {
 	gorm.Model
-	Name       string
-	Meta       models.JSONMap
-	Privileges models.JSONMap
+	Name       string         `json:"name"`
+	Meta       models.JSONMap `json:"meta"`
+	Privileges models.JSONMap `json:"privileges"`
 }

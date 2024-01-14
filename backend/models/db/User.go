@@ -7,8 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string
-	PassHash string
-	Meta     models.JSONMap
-	Role     Role
+	Username string         `json:"username"`
+	PassHash string         `json:"-"`
+	Meta     models.JSONMap `json:"meta"`
+	Role     Role           `json:"role"`
+	RoleID   uint           `json:"-"`
 }
