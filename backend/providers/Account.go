@@ -2,7 +2,6 @@ package providers
 
 import (
 	"errors"
-	"log"
 	"main/models/db"
 	"main/services"
 )
@@ -10,6 +9,11 @@ import (
 type Account struct {
 	p    *AccountProvider
 	User *db.User
+}
+
+func (a *Account) SetRole(roleid uint) error {
+	a.User.RoleID = roleid
+	return a.p.db.Save(a.User).Error
 }
 
 func (a *Account) Register(login string, password string) (uid uint, err error) {
@@ -45,13 +49,17 @@ func (a *Account) LoginWithSecService(login string, password string, sec service
 	return a.User.ID, err
 }
 
+func (a *Account) UpdateRole(roleid uint) error {
+	a.User.RoleID = roleid
+	return a.p.db.Save(a.User).Error
+}
+
 func (a *Account) GetUser(uid uint) (err error) {
 	a.User.ID = uid
 	return a.p.db.Preload("Role").First(&a.User).Error
 }
 
 func (a *Account) HasPermission(perm string) bool {
-	log.Println("Checking permission", perm, a.User.Role.Privileges[perm])
 	return a.User.Role.Privileges[perm].(float64) == 1
 }
 

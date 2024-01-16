@@ -37,6 +37,16 @@ func (o *OrgProvider) ListLabels() ([]db.Label, error) {
 	return labels, tx.Error
 }
 
+func (o *OrgProvider) DeleteLabel(lblId uint) error {
+	tx := o.db.Delete(&db.Label{}, lblId)
+	return tx.Error
+}
+
+func (o *OrgProvider) UpdateLabel(lbl *db.Label) error {
+	tx := o.db.Updates(&lbl)
+	return tx.Error
+}
+
 // endregion
 
 //region Branches
@@ -70,6 +80,26 @@ func (o *OrgProvider) CreateSP(branch uint, labels []uint) (uint, error) {
 	}
 	tx := o.db.Create(sp)
 	return sp.ID, tx.Error
+}
+
+func (o *OrgProvider) UpdateSP(id uint, labels []uint) error {
+	var lbls []db.Label
+	for _, l := range labels {
+		lbl := db.Label{}
+		lbl.ID = l
+		lbls = append(lbls, lbl)
+	}
+	sp := &db.ServicePoint{
+		Labels: lbls,
+	}
+	sp.ID = id
+	tx := o.db.Updates(sp)
+	return tx.Error
+}
+
+func (o *OrgProvider) DeleteSP(id uint) error {
+	tx := o.db.Delete(&db.ServicePoint{}, id)
+	return tx.Error
 }
 
 // endregion

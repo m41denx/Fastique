@@ -24,3 +24,7 @@ func (ap *AccountProvider) New() *Account {
 		User: &db.User{},
 	}
 }
+
+func (ap *AccountProvider) DeleteUser(uid uint) error {
+	return ap.db.Delete(&db.User{}, uid).Error
+}
