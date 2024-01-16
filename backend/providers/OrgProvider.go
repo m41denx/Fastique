@@ -106,13 +106,12 @@ func (o *OrgProvider) DeleteSP(id uint) error {
 
 // region Roles
 
-func (o *OrgProvider) CreateRole(name string, privs map[string]string, meta map[string]string) (uint, error) {
+func (o *OrgProvider) CreateRole(name string, privs map[string]interface{}, meta map[string]string) (uint, error) {
 	mmeta := utils.CastToIface(meta)
-	mprivs := utils.CastToIface(privs)
 	role := &db.Role{
 		Name:       name,
 		Meta:       mmeta,
-		Privileges: mprivs,
+		Privileges: privs,
 	}
 	tx := o.db.Create(role)
 	return role.ID, tx.Error

@@ -30,6 +30,12 @@ func (t *TicketProvider) GetTodayTickets(branchID ...uint) ([]db.Ticket, error) 
 	return t.GetTicketsForDay(time.Now(), branchID...)
 }
 
+func (t *TicketProvider) GetAllTickets() ([]db.Ticket, error) {
+	var tickets []db.Ticket
+	tx := t.db.Model(&db.Ticket{}).Preload("Branch").Preload("Servant").Preload("Label").Find(&tickets)
+	return tickets, tx.Error
+}
+
 func (t *TicketProvider) GetTicket(id uint) (db.Ticket, error) {
 	ticket := db.Ticket{}
 	ticket.ID = id

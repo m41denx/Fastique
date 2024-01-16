@@ -58,6 +58,9 @@ func StartWS(api *API) error {
 	//region Adm
 	adm := app.Group("/adm")
 	adm.Get("/roles", api.AdmGetRoles)
+	adm.Post("/role", api.AdmCreateRole)
+	//adm.Post("/role/:id", api.AdmUpdateRole)
+	//adm.Delete("/role/:id", api.AdmDeleteRole)
 
 	adm.Get("/users", api.AdmGetUsers)
 

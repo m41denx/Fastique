@@ -1,7 +1,7 @@
 import {useRouter} from "next/router";
 import NavBar from "@/components/NavBar";
 import {useState} from "react";
-import {Button, Form, Input, Menu, Modal, Select, Table} from "antd";
+import {Button, Checkbox, Form, Input, Menu, Modal, Select, Table} from "antd";
 import {
     faAdd,
     faKey,
@@ -47,7 +47,7 @@ export default function Admin(props) {
                     {page === "users" && <UsersView token={props.token} />}
                     {page === "roles" && <RolesView token={props.token} />}
                     {page === "sp" && <BranchesView token={props.token} />}
-                    {page === "tickets" && <div>Tickets</div>}
+                    {page === "tickets" && <TicketsView token={props.token} />}
                 </div>
             </div>
         </div>
@@ -55,7 +55,12 @@ export default function Admin(props) {
 }
 
 const RolesView = (props) => {
+    const [mopen, setMopen] = useState(false)
     const {data, error, isLoading} = useSWR(wapi("adm/roles"),
+        (url) => axios.get(url, {headers: {"Authorization": props.token}})
+            .then(r => r.data))
+
+    const {data: branches} = useSWR(wapi("adm/branches"),
         (url) => axios.get(url, {headers: {"Authorization": props.token}})
             .then(r => r.data))
 
@@ -73,10 +78,66 @@ const RolesView = (props) => {
                     )}</p>
         },
     ]
+
+
+    const createRole = (data) => {
+        const req  = {
+            name: data.name,
+            permissions: {
+                admin: data.admin,
+                branch: data.branch,
+            }
+        }
+
+        axios.post(wapi("adm/role"), req, {headers: {"Authorization": props.token}})
+            .then(r => {
+                toast.success("Роль создана")
+                mutate(wapi("adm/roles"))
+                setMopen(false)
+            }).catch(e=>{
+            toast.error("Не удалось создать роль")
+        })
+
+    }
+
     return <div className="flex flex-col gap-2">
         <p className="text-xl">Роли</p>
         <Table columns={columns} dataSource={data||[]} />
-        <Button type="primary" className="bg-blue-600 w-fit ml-auto">Создать роль</Button>
+        <Button type="primary" className="bg-blue-600 w-fit ml-auto" onClick={()=>setMopen("Создать роль")}>Создать роль</Button>
+        <Modal open={mopen} title={mopen} onCancel={()=>setMopen(false)} footer={[]}>
+            {mopen==="Создать роль" &&
+                <Form name="basic"
+                      labelCol={{span: 8}}
+                      wrapperCol={{span: 16}}
+                      initialValues={{remember: true}}
+                      onFinish={createRole}
+                      autoComplete="off">
+                    <Form.Item
+                        label="Название"
+                        name="name"
+                        rules={[{
+                            required: true,
+                            message: 'Укажите название роли',
+                        }]}>
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        label="Администратор"
+                        name="admin">
+                        <Checkbox />
+                    </Form.Item>
+                    <Form.Item
+                        label="Доступ к заведению"
+                        name="branch">
+                        <Select options={branches?.map(branch=>({label: branch.name, value: branch.ID}))} />
+                    </Form.Item>
+                    <Form.Item className="flex justify-end">
+                        <Button type="primary" htmlType="submit" className="bg-blue-600">
+                            Создать
+                        </Button>
+                    </Form.Item>
+                </Form>}
+        </Modal>
     </div>
 }
 
@@ -118,9 +179,10 @@ const UsersView = (props) => {
     ]
 
     const createUser = (data) => {
-        axios.post(wapi("adm/users"), data, {headers: {"Authorization": props.token}})
+        axios.post(wapi("adm/user"), data, {headers: {"Authorization": props.token}})
             .then(r => {
                 toast.success("Сотрудник создан")
+                mutate(wapi("adm/users"))
                 setMopen(false)
             }).catch(e=>{
             toast.error("Не удалось создать сотрудника")
@@ -128,7 +190,7 @@ const UsersView = (props) => {
     }
 
     const updateUser = (data) => {
-        axios.post(wapi(`adm/users/${selectedUser.ID}`), data, {headers: {"Authorization": props.token}})
+        axios.post(wapi(`adm/user/${selectedUser.ID}`), data, {headers: {"Authorization": props.token}})
             .then(r => {
                 toast.success("Сотрудник обновлен")
                 setMopen(false)
@@ -138,7 +200,7 @@ const UsersView = (props) => {
     }
 
     const deleteUser = (uid) => {
-        axios.delete(wapi(`adm/users/${uid}`), {headers: {"Authorization": props.token}})
+        axios.delete(wapi(`adm/user/${uid}`), {headers: {"Authorization": props.token}})
             .then(r => {
                 toast.success("Сотрудник удален")
                 mutate(wapi("adm/users"))
@@ -180,7 +242,7 @@ const UsersView = (props) => {
                             pattern: /^[A-Za-z0-9._-]+$/,
                             min: 8
                         }]}>
-                        <Input type="password" />
+                        <Input.Password />
                     </Form.Item>
                     <Form.Item
                         label="Роль"
@@ -498,5 +560,27 @@ const BranchesView = (props) => {
                     </Form.Item>
                 </Form>}
         </Modal>
+    </div>
+}
+
+
+const TicketsView = (props) => {
+
+    const {data, error, isLoading} = useSWR(wapi("adm/tickets"),
+        (url) => axios.get(url, {headers: {"Authorization": props.token}})
+            .then(r => r.data))
+
+    const columns = [
+        {title: "ID", dataIndex: "name", key: "id"},
+        {title: "Заведение", dataIndex: "branch", key: "branch", render: (branch)=>branch.name},
+        {title: "Услуга", dataIndex: "label", key: "label", render: (label) => label.name
+        },
+        {title: "Сотрудник", dataIndex: "servant", key: "servant", render: (servant) => servant.ID?servant.username:"-"
+        }
+    ]
+
+    return <div className="flex flex-col gap-2">
+        <p className="text-xl">Список заявок</p>
+        <Table columns={columns} dataSource={data||[]} />
     </div>
 }

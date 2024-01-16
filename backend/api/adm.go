@@ -6,6 +6,8 @@ import (
 	"main/models/db"
 )
 
+// region Roles
+
 func (api *API) AdmGetRoles(c *fiber.Ctx) error {
 	acc := api.AccountProvider.New()
 	if authToken(c, acc) != nil || !acc.HasPermission("admin") {
@@ -17,6 +19,26 @@ func (api *API) AdmGetRoles(c *fiber.Ctx) error {
 	}
 	return c.JSON(roles)
 }
+
+func (api *API) AdmCreateRole(c *fiber.Ctx) error {
+	acc := api.AccountProvider.New()
+	if authToken(c, acc) != nil || !acc.HasPermission("admin") {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ApiError{Message: "Unauthorized"})
+	}
+	role := &struct {
+		Name        string                 `json:"name"`
+		Permissions map[string]interface{} `json:"permissions"`
+	}{}
+	if err := c.BodyParser(role); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ApiError{Message: err.Error()})
+	}
+	if _, err := api.OrgProvider.CreateRole(role.Name, role.Permissions, map[string]string{}); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ApiError{Message: err.Error()})
+	}
+	return c.JSON(role)
+}
+
+// endregion
 
 // region Users
 
@@ -226,7 +248,7 @@ func (api *API) AdmGetTickets(c *fiber.Ctx) error {
 	if authToken(c, acc) != nil || !acc.HasPermission("admin") {
 		return c.Status(fiber.StatusUnauthorized).JSON(models.ApiError{Message: "Unauthorized"})
 	}
-	tickets, err := api.TicketProvider.GetTodayTickets()
+	tickets, err := api.TicketProvider.GetAllTickets()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ApiError{Message: err.Error()})
 	}
