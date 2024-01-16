@@ -36,7 +36,7 @@ func StartWS(api *API) error {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/monitor/:id", websocket.New(nil))
+	app.Get("/monitor/:id", websocket.New(api.FetchMonitor))
 	//endregion
 
 	// region Auth
@@ -50,6 +50,7 @@ func StartWS(api *API) error {
 	fetch.Get("/org", api.Fetch)
 	fetch.Get("/labels", api.FetchLabels)
 	fetch.Get("/branches/:label", api.FetchBranchesWithLabel)
+	fetch.Get("/branches", api.FetchBranches)
 	//endregion
 
 	app.Post("/reserve", api.Reserve)

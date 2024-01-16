@@ -12,7 +12,7 @@ type Ticket struct {
 	Branch         Branch         `json:"branch"`
 	BranchID       uint           `json:"-"`
 	ServicePoint   ServicePoint   `json:"sp"` // Assign only after start
-	ServicePointID uint           `json:"-"`
+	ServicePointID uint           `json:"spid"`
 	Label          Label          `json:"label"`
 	LabelID        uint           `json:"-"`
 	BeginTime      time.Time      `json:"beginTime"` // Refresh on start

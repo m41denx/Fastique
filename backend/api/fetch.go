@@ -5,6 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"main/models"
 	"main/models/db"
+	"strconv"
+	"time"
 )
 
 func (api *API) Fetch(c *fiber.Ctx) error {
@@ -16,8 +18,15 @@ func (api *API) Fetch(c *fiber.Ctx) error {
 
 func (api *API) FetchMonitor(c *websocket.Conn) {
 	id := c.Params("id")
+	idc, _ := strconv.Atoi(id)
 	for {
-		c.WriteMessage(websocket.TextMessage, []byte(id))
+		tickets, err := api.TicketProvider.GetTodayTickets(uint(idc))
+		if err != nil {
+			c.Close()
+			return
+		}
+		c.WriteJSON(tickets)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -52,4 +61,12 @@ func (api *API) FetchBranchesWithLabel(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ApiError{Message: err.Error()})
 	}
 	return c.JSON(branches2)
+}
+
+func (api *API) FetchBranches(c *fiber.Ctx) error {
+	tickets, err := api.OrgProvider.ListBranches()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ApiError{Message: err.Error()})
+	}
+	return c.JSON(tickets)
 }

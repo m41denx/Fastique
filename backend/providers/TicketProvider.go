@@ -16,16 +16,18 @@ func NewTicketProvider(db *gorm.DB) *TicketProvider {
 	}
 }
 
-func (t *TicketProvider) GetTicketsForDay(date time.Time) ([]db.Ticket, error) {
+func (t *TicketProvider) GetTicketsForDay(date time.Time, branchID ...uint) ([]db.Ticket, error) {
 	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	date2 := date.AddDate(0, 0, 1)
 	var tickets []db.Ticket
-	tx := t.db.Where("begin_time >= ?", date).Where("end_time <= ?", date2).Find(&tickets)
+	tx := t.db.Where("begin_time >= ? AND end_time <= ?", date, date2).
+		Where("branch_id IN ?", branchID).
+		Order("begin_time").Find(&tickets)
 	return tickets, tx.Error
 }
 
-func (t *TicketProvider) GetTodayTickets() ([]db.Ticket, error) {
-	return t.GetTicketsForDay(time.Now())
+func (t *TicketProvider) GetTodayTickets(branchID ...uint) ([]db.Ticket, error) {
+	return t.GetTicketsForDay(time.Now(), branchID...)
 }
 
 func (t *TicketProvider) GetTicket(id uint) (db.Ticket, error) {
