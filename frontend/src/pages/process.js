@@ -42,14 +42,14 @@ export default function Process(props) {
 
     const [selected, setSelected] = useState({
         branch: branches?branches[0]:{name:"Не выбрано"},
-        sp: branches?branches[0].service_points[0]:{name:"Не выбрано"},
+        sp: branches?branches[0]?.service_points[0]||{name: "Не выбрано"}:{name:"Не выбрано"},
         authed: false
     })
 
     const [current, setCurrent] = useState(null)
 
 
-    const {data: tickets} = useSWR(wapi(`worker/queue/${selected.sp.ID}`),
+    const {data: tickets} = useSWR(wapi(`worker/queue/${selected.sp?.ID}`),
         (url) => axios.get(url, {headers: {Authorization: props.token}})
             .then(r => r.data))
 
@@ -107,12 +107,13 @@ export default function Process(props) {
                 <div className="bg-gray-200 rounded-xl p-4 flex items-center gap-4">
                     <Breadcrumb items={[
                         {title: <Link href="/"><FontAwesomeIcon icon={faHome}/></Link>},
-                        {title: selected.branch.name, menu: {items: branches?.map((b)=>{
+                        {title: selected.branch?.name||'-', menu: {items: branches?.map((b)=>{
                                     return {title: b.name, onClick: ()=>{setSelected({...selected, branch: b})}}
                                 })}},
-                        {title: selected.branch.service_points&&`Окно ${getOrderFromList(selected.branch.service_points, selected.sp.ID) + 1}`, menu: {items: selected.branch.service_points?.map((b,i)=>{
+                        {title: selected.branch?.service_points?`Окно ${getOrderFromList(selected.branch.service_points, selected.sp.ID) + 1}`:'-',
+                            menu: {items: selected.branch?.service_points?.map((b,i)=>{
                                     return {title: `Окно ${i+1}`, onClick: ()=>{setSelected({...selected, sp: b})}}
-                                })}}
+                                })||[]}}
                     ]} />
                     <Button type="primary" danger={selected.authed} onClick={()=>{
                         if(!selected.authed)

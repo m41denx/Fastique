@@ -52,7 +52,7 @@ export default function Screen(props) {
         <div className="flex items-center text-xl bg-gray-200 shadow drop-shadow p-2">
             <Breadcrumb items={[
                 {title: <Link href="/"><FontAwesomeIcon icon={faHome}/></Link>},
-                {title: selected.branch.name, menu: {items: branches?.map((b)=>{
+                {title: selected.branch?.name||'-', menu: {items: branches?.map((b)=>{
                             return {title: b.name, onClick: ()=>{setSelected({...selected, branch: b})}}
                         })}},
             ]} />

@@ -60,7 +60,10 @@ func (a *Account) GetUser(uid uint) (err error) {
 }
 
 func (a *Account) HasPermission(perm string) bool {
-	return a.User.Role.Privileges[perm].(float64) == 1
+	if v, ok := a.User.Role.Privileges[perm]; ok {
+		return v.(float64) == 1
+	}
+	return false
 }
 
 func (a *Account) NewSession() (session string) {
