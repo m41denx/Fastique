@@ -7,37 +7,47 @@ import {Button, DatePicker, Form, Select, TimePicker} from "antd";
 import useSWR from "swr";
 import wapi from "@/config";
 import axios from "axios";
+import dayjs from "dayjs";
 
-const srv_labels = [
-    {label: "В один конец", tag: "K"},
-    {label: "Ну поплачь", tag: "P"}
-]
+const range = (start, end) => {
+    const result = [];
+    for (let i = start; i < end; i++) {
+        result.push(i);
+    }
+    return result;
+};
 
-const times = [
-    {time: "10:00", taken: true},
-    {time: "10:30", taken: false},
-    {time: "11:00", taken: true},
-    {time: "11:30", taken: true},
-    {time: "12:00", taken: true},
-    {time: "12:30", taken: false},
-    {time: "13:00", taken: false},
-    {time: "13:30", taken: true},
-]
-
-export function getServerSideProps(ctx) {
-
-    return {
-        props: {
-            labels: srv_labels,
-        }
+const getLoad = (n) => {
+    switch (n){
+        case -1:
+            return "-"
+        case 0:
+        case 1:
+            return "Низкая"
+        case 2:
+        case 3:
+            return "Средняя"
+        default:
+            return "Высокая"
     }
 }
-
 
 const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
 
 
+const getFromListMap = (list, id, field='ID') => {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i][field] == id) {
+            return list[i]
+        }
+    }
+    return {}
+}
 
+const renderTicker = (ticker, id) => {
+    ticker = ticker||"#"
+    return ticker.replace("#", id)
+}
 
 function daysInMonth (date, offset=0) { // Use 1 for January, 2 for February, etc.
     return new Date(date.getFullYear(), date.getMonth()+1+offset, 0).getDate();
@@ -46,16 +56,21 @@ export default function Order(props) {
 
     const [preform, setPreform] = useState({
         date: new Date(),
-        time: times[0],
-        branch: 0,
-        label: 0
+        time: new Date(),
+        branch: {},
+        label: {}
+    })
+
+    const [result, setResult] = useState({
+        order: "#",
+        load: -1
     })
 
     const {data: labels} = useSWR(wapi("fetch/labels"),
         (url) => axios.get(url)
             .then(r => r.data))
 
-    const {data: branches} = useSWR(wapi(`fetch/branches/${preform.label}`),
+    const {data: branches} = useSWR(wapi(`fetch/branches/${preform.label.ID}`),
         (url) => axios.get(url)
             .then(r => r.data))
 
@@ -66,22 +81,39 @@ export default function Order(props) {
         })
     },[])
 
+    const reserve = (d) => {
+        let date = preform.date
+        date.setHours(preform.time.getHours())
+        date.setMinutes(preform.time.getMinutes())
+        let req = {
+            label: preform.label.ID,
+            branch: preform.branch.ID,
+            date: preform.date.toISOString(),
+        }
+        axios.post(wapi("reserve"), req)
+            .then(r => {
+                setResult(r.data)
+            })
+    }
 
 
     return <div className="h-screen flex flex-col justify-center items-center">
         <div className="flex gap-24">
-            {/*<Ticket img="https://img.icons8.com/pastel-glyph/128/secured-letter--v1.png"*/}
-            {/*title={orgData.title} subtitle={orgData.desc} ticker={label.tag+"-07"}*/}
-            {/*date={`${day} ${month}`} time={time.time} load={"Низкая"} labels={[label.label]}*/}
-            {/*note="Адрес: ул Пушкина, 12, отделение №030"/>*/}
+            <Ticket img="https://img.icons8.com/pastel-glyph/128/secured-letter--v1.png"
+            title={orgData.title} subtitle={orgData.desc} ticker={renderTicker(preform.label.template, result.order)}
+            date={`${preform.date.getDate()} ${months[preform.date.getMonth()]}`}
+                    time={`${("0"+preform.time.getHours()).slice(-2)}:${("0"+preform.time.getMinutes()).slice(-2)}`}
+                    load={getLoad(result.load)} labels={[preform.label.name]}
+            note={preform.branch.name}/>
 
-            <div className="flex flex-col w-96 h-full bg-[#f4f5f6] p-4 rounded-2xl border-solid border-2 border-[#9facbc]">
-                <p className="bg-slate-600 px-4 py-2 rounded-xl text-white text-3xl">Тут заголовок</p>
+            {result.load<0 ? <div className="flex flex-col w-96 h-full bg-[#f4f5f6] p-4 rounded-2xl border-solid border-2 border-[#9facbc]">
+                <p className="bg-slate-600 px-4 py-2 rounded-xl text-white text-2xl">{orgData.title}</p>
 
                <Form name="basic"
                       labelCol={{span: 6}}
                       wrapperCol={{span: 24}}
                       initialValues={{remember: true}}
+                     onFinish={reserve}
                       autoComplete="off" className="p-4 bg-gray-200 rounded-xl mt-2">
                     <Form.Item
                         label="Услуга"
@@ -92,7 +124,7 @@ export default function Order(props) {
                         }]}>
                         <Select placeholder="Выберите услугу" onChange={(v)=>setPreform({
                             ...preform,
-                            label: v
+                            label: getFromListMap(labels, v)
                         })}
                                 options={labels?.map(lbl=>({label: lbl.name, value: lbl.ID}))} />
                     </Form.Item>
@@ -105,7 +137,7 @@ export default function Order(props) {
                        }]}>
                        <Select placeholder="Выберите адрес"  onChange={(v)=>setPreform({
                            ...preform,
-                           branch: v
+                           branch: getFromListMap(branches, v)
                        })}
                                options={branches?.map(lbl=>({label: lbl.name, value: lbl.ID}))} />
                    </Form.Item>
@@ -116,7 +148,11 @@ export default function Order(props) {
                             required: true,
                             message: 'Укажите дату',
                         }]}>
-                        <DatePicker className="w-full" placeholder="Укажите дату" format="DD.MM.YYYY" disabledDate={d=>d<new Date().setDate(new Date().getDate()-1)} />
+                        <DatePicker className="w-full" placeholder="Укажите дату" format="DD.MM.YYYY" onChange={(v)=>setPreform({
+                            ...preform,
+                            date: dayjs(v).toDate()
+                        })}
+                                    disabledDate={d=>d<new Date().setDate(new Date().getDate()-1)}/>
                     </Form.Item>
                     <Form.Item
                         label="Время"
@@ -125,7 +161,11 @@ export default function Order(props) {
                             required: true,
                             message: 'Укажите время',
                         }]}>
-                        <TimePicker format="HH:mm" placeholder="Укажите время" minuteStep={30} className="w-full" />
+                        <TimePicker format="HH:mm" placeholder="Укажите время" minuteStep={30} hideDisabledOptions
+                                    className="w-full" disabledTime={()=>({
+                             disabledHours: ()=> new Date().getDate() == preform.date.getDate() ? range(0, new Date().getHours()) : [],
+                             disabledMinutes: (v)=> v==new Date().getHours() ? range(0, new Date().getMinutes()) : []
+                        })} onChange={(v)=>setPreform({...preform, time: dayjs(v).toDate()})} />
                     </Form.Item>
 
                     <Form.Item className="flex justify-end">
@@ -135,6 +175,7 @@ export default function Order(props) {
                     </Form.Item>
                </Form>
             </div>
+                :<div className="bg-gray-200 rounded-xl p-4 h-fit">🎉 Вы успешено забронировали время</div> }
         </div>
     </div>
 }

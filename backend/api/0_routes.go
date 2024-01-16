@@ -52,6 +52,8 @@ func StartWS(api *API) error {
 	fetch.Get("/branches/:label", api.FetchBranchesWithLabel)
 	//endregion
 
+	app.Post("/reserve", api.Reserve)
+
 	//region Adm
 	adm := app.Group("/adm")
 	adm.Get("/roles", api.AdmGetRoles)

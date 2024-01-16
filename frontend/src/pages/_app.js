@@ -1,5 +1,6 @@
 import '@/styles/globals.css'
 import {useEffect, useState} from "react";
+import {ConfigProvider} from "antd";
 
 export default function App({ Component, pageProps }) {
   const [token, setToken] = useState("")
@@ -7,5 +8,9 @@ export default function App({ Component, pageProps }) {
     const ltoken = localStorage.getItem("token") || "."
     ltoken&&setToken(ltoken)
   }, [])
-  return <Component {...pageProps} token={token} setToken={setToken} />
+  return <ConfigProvider theme={{
+
+  }}>
+    <Component {...pageProps} token={token} setToken={setToken} />
+  </ConfigProvider>
 }

@@ -8,6 +8,10 @@ body {
     overflow: hidden;
 }
 
+.ant-btn {
+    background-color: #1677ff;
+}
+
 
 .bg-hero {
     background-color: #fefefe;

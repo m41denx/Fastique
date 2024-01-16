@@ -9,13 +9,15 @@ import (
 type Ticket struct {
 	gorm.Model
 	Name           string         `json:"name"`
-	ServicePoint   ServicePoint   `json:"sp"`
+	Branch         Branch         `json:"branch"`
+	BranchID       uint           `json:"-"`
+	ServicePoint   ServicePoint   `json:"sp"` // Assign only after start
 	ServicePointID uint           `json:"-"`
 	Label          Label          `json:"label"`
 	LabelID        uint           `json:"-"`
-	BeginTime      time.Time      `json:"beginTime"`
-	EndTime        time.Time      `json:"endTime"`
-	Servant        User           `json:"servant"`
+	BeginTime      time.Time      `json:"beginTime"` // Refresh on start
+	EndTime        time.Time      `json:"endTime"`   // Assign only after end
+	Servant        User           `json:"servant"`   // Assign only after start
 	ServantID      uint           `json:"-"`
 	Meta           models.JSONMap `json:"meta"`
 }
