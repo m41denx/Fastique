@@ -76,7 +76,7 @@ export default function Order(props) {
 
     const [orgData, setOrgData] = useState({})
     useEffect(()=>{
-        fetch("http://localhost:5000/fetch/org").then(r=>r.json()).then(j=>{
+        fetch(wapi("fetch/org")).then(r=>r.json()).then(j=>{
             setOrgData(j)
         })
     },[])

@@ -48,8 +48,6 @@ export default function Screen(props) {
         }
     })||[]
 
-    console.log(lastMsg)
-
     return <div className="h-screen">
         <div className="flex items-center text-xl bg-gray-200 shadow drop-shadow p-2">
             <Breadcrumb items={[
