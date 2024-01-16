@@ -36,6 +36,20 @@ func (t *TicketProvider) GetAllTickets() ([]db.Ticket, error) {
 	return tickets, tx.Error
 }
 
+func (t *TicketProvider) GetTodayTicketsForLabel(branchID uint, labelID uint) ([]db.Ticket, error) {
+	tickets, err := t.GetTicketsForDay(time.Now(), branchID)
+	if err != nil {
+		return tickets, err
+	}
+	var tickets2 []db.Ticket
+	for _, ticket := range tickets {
+		if ticket.LabelID == labelID {
+			tickets2 = append(tickets2, ticket)
+		}
+	}
+	return tickets2, nil
+}
+
 func (t *TicketProvider) GetTicket(id uint) (db.Ticket, error) {
 	ticket := db.Ticket{}
 	ticket.ID = id

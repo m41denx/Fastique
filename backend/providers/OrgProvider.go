@@ -102,6 +102,22 @@ func (o *OrgProvider) DeleteSP(id uint) error {
 	return tx.Error
 }
 
+func (o *OrgProvider) ClaimSP(id uint, user *db.User) error {
+	sp := &db.ServicePoint{}
+	sp.ID = id
+	sp.UserID = user.ID
+	tx := o.db.Where("id = ?", id).Updates(sp)
+	return tx.Error
+}
+
+func (o *OrgProvider) UnclaimSP(id uint) error {
+	return o.db.Model(&db.ServicePoint{}).Where("id = ?", id).Update("user_id", 0).Error
+}
+
+func (o *OrgProvider) SetSPAvailability(id uint, available bool) error {
+	return o.db.Model(&db.ServicePoint{}).Where("id = ?", id).Update("available", available).Error
+}
+
 // endregion
 
 // region Roles

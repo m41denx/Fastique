@@ -39,6 +39,17 @@ func StartWS(api *API) error {
 	app.Get("/monitor/:id", websocket.New(api.FetchMonitor))
 	//endregion
 
+	// region worker
+	worker := app.Group("/worker")
+	worker.Post("/b/:id", api.WorkerReserve)
+	worker.Delete("/b/:id", api.WorkerRelease)
+
+	worker.Post("/claim/:id/:tid", api.WorkerClaim)
+	worker.Delete("/claim/:id/:tid", api.WorkerUnclaim)
+	worker.Get("/queue/:id", api.WorkerQueue)
+
+	// endregion
+
 	// region Auth
 	auth := app.Group("/auth")
 	auth.Post("/login", api.AuthLogin)

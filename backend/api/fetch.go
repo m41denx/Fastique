@@ -21,11 +21,17 @@ func (api *API) FetchMonitor(c *websocket.Conn) {
 	idc, _ := strconv.Atoi(id)
 	for {
 		tickets, err := api.TicketProvider.GetTodayTickets(uint(idc))
+		var tickets2 []db.Ticket
+		for _, ticket := range tickets {
+			if ticket.EndTime.Before(time.Date(1995, 1, 1, 0, 0, 0, 0, time.UTC)) {
+				tickets2 = append(tickets2, ticket)
+			}
+		}
 		if err != nil {
 			c.Close()
 			return
 		}
-		c.WriteJSON(tickets)
+		c.WriteJSON(tickets2)
 		time.Sleep(1 * time.Second)
 	}
 }
