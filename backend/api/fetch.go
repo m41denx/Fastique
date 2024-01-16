@@ -31,7 +31,10 @@ func (api *API) FetchMonitor(c *websocket.Conn) {
 			c.Close()
 			return
 		}
-		c.WriteJSON(tickets2)
+		if c.WriteJSON(tickets2) != nil {
+			c.Close()
+			return
+		}
 		time.Sleep(1 * time.Second)
 	}
 }
